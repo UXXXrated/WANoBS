@@ -22,7 +22,7 @@ with gr.Blocks() as demo:
     clear_button = gr.Button("Clear All Renders")
 
     progress = gr.Textbox(label="Status")
-    outputs = gr.File(label="Rendered Video")
+    outputs = gr.File(label="Rendered Image")
 
     def generate(prompt, input_image, lora_files, aspect_ratio):
         width, height = ASPECT_RATIOS[aspect_ratio]
