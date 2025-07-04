@@ -1,52 +1,52 @@
 import os
 from datetime import datetime
-import torch
 from diffusers import StableDiffusionPipeline, StableVideoDiffusionPipeline
+import torch
+from PIL import Image
+import imageio
 
-# === Config ===
 OUTPUT_DIR = "/workspace/outputs"
 UPLOAD_DIR = "/workspace/ComfyUI/models/Lora"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# === Load pipelines once ===
-sd_pipe = StableDiffusionPipeline.from_pretrained(
+# Load your pipelines once — adjust model IDs as needed.
+text2img_pipe = StableDiffusionPipeline.from_pretrained(
     "runwayml/stable-diffusion-v1-5",
     torch_dtype=torch.float16
 ).to("cuda")
 
-svid_pipe = StableVideoDiffusionPipeline.from_pretrained(
+img2vid_pipe = StableVideoDiffusionPipeline.from_pretrained(
     "stabilityai/stable-video-diffusion-img2vid",
     torch_dtype=torch.float16
 ).to("cuda")
 
-# === Main function ===
 def run_wan_generate(prompt, input_image, lora_pairs, width, height):
-    """
-    Makes a short video from:
-    - Prompt only (makes an image, then makes video)
-    - OR image + prompt (refine given image)
-    """
-    # If no input image, do text→image first
-    if input_image is None:
-        print("[WAN] No image given → making base image from prompt...")
-        image = sd_pipe(prompt, width=width, height=height).images[0]
-    else:
-        print("[WAN] Using uploaded image.")
-        image = input_image  # your uploaded image
-
-    # Video generation: image → frames
-    print("[WAN] Making video frames from image...")
-    frames = svid_pipe(image).frames
-
-    # === Save video ===
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     ratio_tag = f"{width}x{height}"
     filename = f"wan_render_{timestamp}_{ratio_tag}.mp4"
     output_path = os.path.join(OUTPUT_DIR, filename)
 
-    # Save MP4 (this is an example, adapt as needed!)
-    import imageio
+    if input_image is None:
+        # TEXT TO IMAGE → IMAGE TO VIDEO
+        image = text2img_pipe(prompt, height=height, width=width).images[0]
+    else:
+        # Use uploaded image as input
+        image = Image.open(input_image).convert("RGB").resize((width, height))
+
+    # IMAGE TO VIDEO FRAMES
+    frames = img2vid_pipe(image=image, decode_chunk_size=8).frames[0]
+
+    # Save frames as MP4
     imageio.mimsave(output_path, frames, fps=8)
 
-    retur
+    return output_path
+
+def get_lora_list():
+    return [f for f in os.listdir(UPLOAD_DIR) if f.endswith(".safetensors")]
+
+def purge_outputs():
+    for f in os.listdir(OUTPUT_DIR):
+        if f.endswith(".mp4"):
+            os.remove(os.path.join(OUTPUT_DIR, f))
+    return []
