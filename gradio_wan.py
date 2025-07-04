@@ -1,7 +1,6 @@
 import gradio as gr
 from run_wan import run_wan_generate, get_lora_list, purge_outputs
 
-# Aspect ratio options for 720p
 ASPECT_RATIOS = {
     "1280x960 (4:3)": (1280, 960),
     "720x960 (3:4)": (720, 960),
@@ -15,7 +14,7 @@ with gr.Blocks() as demo:
         prompt = gr.Textbox(label="Prompt", placeholder="Describe what you want to render...")
         input_image = gr.Image(label="Optional Image", type="filepath")
 
-    lora_files = gr.CheckboxGroup(choices=get_lora_list(), label="Select LoRA Files", info="Toggle multiple LoRA models")
+    lora_files = gr.CheckboxGroup(choices=get_lora_list(), label="Select LoRA Files")
 
     aspect_ratio = gr.Radio(choices=list(ASPECT_RATIOS.keys()), value="1280x960 (4:3)", label="Aspect Ratio")
 
