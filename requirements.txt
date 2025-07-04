@@ -3,5 +3,5 @@ diffusers
 transformers
 accelerate
 gradio
-imageio
+imageio[ffmpeg]
 Pillow
