@@ -1,4 +1,5 @@
 # 🌀 WANoBS: WAN 14B Video Generator
+![Alpha](https://img.shields.io/badge/status-alpha-orange)
 
 This is your drag & drop Gradio interface for WAN Video:  
 - Upload LoRAs  
