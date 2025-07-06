@@ -16,7 +16,7 @@ This is your drag & drop Gradio interface for WAN Video:
 - **Expose HTTP Port:** 7860  
 - **Volume Disk:** 150 GB  
 - **Container Disk:** 50 GB
-- **GPU:** NVIDIA RTX 4090 or H100 recommended for best performance.
+- **GPU:** NVIDIA RTX 4090 or H100 recommended. Other high-end GPUs may not work properly.
 
 ---
 
