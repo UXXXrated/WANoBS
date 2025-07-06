@@ -9,16 +9,12 @@
 - Generate video with auto-named output  
 - See all renders in a gallery → download or delete as needed
 
----
-
 ## ✅ RunPod Recommended Settings
 
 - **Expose HTTP Port:** 7860  
 - **Volume Disk:** 150 GB  
 - **Container Disk:** 50 GB
 - **GPU:** NVIDIA RTX 4090 or H100 recommended. Other high-end GPUs may not work properly.
-
----
 
 ## 🚀 Deploy
  
@@ -31,14 +27,10 @@ Your Pod ID is the short, random ID shown at the top of your Pod’s details pag
 3. Open your WAN Gradio app link and add your ID: 
 `https://<YOURPODID>-7860.proxy.runpod.net/`
 
----
-
 ## ⚙️ WAN Backend
 
 - The WAN logic lives in `run_wan.py` → `run_wan_generate()`.  
 - Replace the dummy stub with your real WAN load + inference code.
-
----
 
 ## 🗂️ Output
 
@@ -46,8 +38,6 @@ Your Pod ID is the short, random ID shown at the top of your Pod’s details pag
 - Auto-named with timestamp + aspect ratio  
 - Only download the ones you want  
 - `Purge All` wipes them all.
-
----
 
 ## ✅ Enjoy!
 
