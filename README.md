@@ -24,8 +24,11 @@ This is your drag & drop Gradio interface for WAN Video:
 2. In RunPod, make a new Pod:
    - Use this repo as the custom container
    - Expose port `7860`
-   - Set disks as above  
-3. Open: `https://YOURPODID-7860.proxy.runpod.net/`
+   - Set disks as above
+3. Find your Pod ID  
+Your Pod ID is the short, random ID shown at the top of your Pod’s details page in RunPod.  
+4. Open your WAN Gradio app link and add your ID: 
+`https://<YOURPODID>-7860.proxy.runpod.net/`
 
 ---
 
