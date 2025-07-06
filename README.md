@@ -1,4 +1,4 @@
-# 🌀 WAN 14B Video Generator
+# 🌀 WANoBS: WAN 14B Video Generator
 
 This is your drag & drop Gradio interface for WAN Video:  
 - Upload LoRAs  
