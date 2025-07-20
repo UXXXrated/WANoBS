@@ -5,13 +5,13 @@ import torch
 from diffusers import DiffusionPipeline
 import imageio
 
-# Load WAN-14B once
-print("Loading WAN-14B base model...")
+# Load WAN 2.1 T2V 14B model (public, working)
+print("Loading WAN 2.1 T2V 14B...")
 wan_pipe = DiffusionPipeline.from_pretrained(
-    "ali-vilab/WAN-14B",
+    "Wan-AI/Wan2.1-T2V-14B-Diffusers",
     torch_dtype=torch.float16
 ).to("cuda")
-print("WAN-14B loaded.")
+print("Model loaded.")
 
 def run_wan_generate(
     prompt: str,
@@ -22,32 +22,18 @@ def run_wan_generate(
     width: int,
     height: int
 ) -> str:
-    # Load conditioning image (optional)
-    init_image = None
-    if image_path:
-        try:
-            init_image = Image.open(image_path).convert("RGB")
-            init_image = init_image.resize((width, height))
-        except Exception as e:
-            print(f"Could not load image: {e}")
-            init_image = None
+    # Conditioning image is not supported by this model (T2V only)
+    init_image = None  # kept for compatibility, ignored here
 
-    # Load and apply LoRAs (optional)
+    # LoRA loading (not supported by this model — placeholder)
     if lora_paths:
         for path, weight in zip(lora_paths, lora_weights):
-            if path and os.path.exists(path):
-                try:
-                    wan_pipe.load_lora_weights(path, weight=weight)  # Adjust if needed
-                    print(f"Loaded LoRA: {path} (weight {weight})")
-                except Exception as e:
-                    print(f"Failed to load LoRA {path}: {e}")
+            print(f"Skipping LoRA {path} — not supported in this model.")
 
-    # Run WAN-14B generation
     print(f"Generating video with prompt: {prompt}")
     try:
         result = wan_pipe(
             prompt=prompt,
-            image=init_image,
             width=width,
             height=height,
             num_frames=24
@@ -57,7 +43,6 @@ def run_wan_generate(
         print(f"Generation failed: {e}")
         return None
 
-    # Save as .mp4 video
     os.makedirs(output_dir, exist_ok=True)
     timestamp = int(time.time())
     output_path = os.path.join(output_dir, f"wan_{timestamp}.mp4")
