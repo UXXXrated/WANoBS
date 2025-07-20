@@ -5,7 +5,7 @@ import torch
 from diffusers import DiffusionPipeline
 import imageio
 
-# Define a reusable loader for base or user-supplied model
+# Load base or user-supplied WAN model
 def load_wan_pipeline(model_path=None):
     if model_path:
         print(f"Loading user model from: {model_path}")
@@ -20,7 +20,7 @@ def load_wan_pipeline(model_path=None):
             torch_dtype=torch.float16
         ).to("cuda")
 
-# Load default model at startup
+# Load default at startup
 wan_pipe = load_wan_pipeline()
 
 def run_wan_generate(
@@ -32,7 +32,28 @@ def run_wan_generate(
     width: int,
     height: int
 ) -> str:
-    # We'll add dynamic model swapping in Step 2
+    global wan_pipe
+
+    # Check for model override file (e.g. model.ckpt or model.safetensors)
+    override_model_path = None
+    for path in lora_paths:
+        filename = os.path.basename(path).lower()
+        if filename.endswith(".ckpt") or filename.endswith(".safetensors") or "model" in filename:
+            override_model_path = path
+            break
+
+    # Reload model from uploaded checkpoint if found
+    if override_model_path:
+        try:
+            print(f"Reloading WAN pipeline from uploaded model: {override_model_path}")
+            wan_pipe = load_wan_pipeline(override_model_path)
+        except Exception as e:
+            print(f"Failed to load user model: {e}")
+            return None
+
+    # Image input is ignored by WAN T2V model — kept for compatibility
+    init_image = None
+
     print(f"Generating video with prompt: {prompt}")
     try:
         result = wan_pipe(
