@@ -52,7 +52,7 @@ def run_wan_generate(
             height=height,
             num_frames=24
         )
-        video_frames = result.frames  # Adjust if different attribute
+        video_frames = result.get("frames") if isinstance(result, dict) else result.frames
     except Exception as e:
         print(f"Generation failed: {e}")
         return None
