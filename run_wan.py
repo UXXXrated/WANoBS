@@ -7,14 +7,22 @@ import imageio
 
 # Load base or user-supplied WAN model
 def load_wan_pipeline(model_path=None):
-    if model_path:
-        print(f"Loading user model from: {model_path}")
-        return DiffusionPipeline.from_pretrained(
-            model_path,
-            torch_dtype=torch.float16
-        ).to("cuda")
-    else:
-        print("Loading default WAN base model...")
+    try:
+        if model_path:
+            print(f"Loading user model from: {model_path}")
+            return DiffusionPipeline.from_pretrained(
+                model_path,
+                torch_dtype=torch.float16
+            ).to("cuda")
+        else:
+            print("Loading default WAN base model...")
+            return DiffusionPipeline.from_pretrained(
+                "Wan-AI/Wan2.1-T2V-14B-Diffusers",
+                torch_dtype=torch.float16
+            ).to("cuda")
+    except Exception as e:
+        print(f"Model loading failed: {e}")
+        print("Falling back to default WAN base model...")
         return DiffusionPipeline.from_pretrained(
             "Wan-AI/Wan2.1-T2V-14B-Diffusers",
             torch_dtype=torch.float16
@@ -34,7 +42,7 @@ def run_wan_generate(
 ) -> str:
     global wan_pipe
 
-    # Check for model override file (e.g. model.ckpt or model.safetensors)
+    # Check for model override file
     override_model_path = None
     for path in lora_paths:
         filename = os.path.basename(path).lower()
@@ -42,17 +50,10 @@ def run_wan_generate(
             override_model_path = path
             break
 
-    # Reload model from uploaded checkpoint if found
+    # Try to reload model if override file is found
     if override_model_path:
-        try:
-            print(f"Reloading WAN pipeline from uploaded model: {override_model_path}")
-            wan_pipe = load_wan_pipeline(override_model_path)
-        except Exception as e:
-            print(f"Failed to load user model: {e}")
-            return None
-
-    # Image input is ignored by WAN T2V model — kept for compatibility
-    init_image = None
+        print(f"Reloading WAN pipeline from uploaded model: {override_model_path}")
+        wan_pipe = load_wan_pipeline(override_model_path)
 
     print(f"Generating video with prompt: {prompt}")
     try:
