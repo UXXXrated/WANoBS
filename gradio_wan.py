@@ -1,54 +1,71 @@
+import os
 import gradio as gr
-from run_wan import run_wan_generate, get_lora_list, purge_outputs
+from run_wan import run_wan_generate
 
-ASPECT_RATIOS = {
-    "1280x960 (4:3)": (1280, 960),
-    "720x960 (3:4)": (720, 960),
-    "720x720 (1:1)": (720, 720)
-}
+UPLOAD_DIR = "./uploads"
+OUTPUT_DIR = "./outputs"
 
-with gr.Blocks() as demo:
-    gr.Markdown("# WAN Video Generator")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+def submit(prompt, image, uploaded_files, width, height, weights):
+    lora_paths = []
+    lora_weights = []
+
+    # Save uploaded files
+    for file_obj, weight in zip(uploaded_files, weights):
+        file_path = os.path.join(UPLOAD_DIR, os.path.basename(file_obj.name))
+        with open(file_path, "wb") as f:
+            f.write(file_obj.read())
+
+        lora_paths.append(file_path)
+        lora_weights.append(weight)
+
+    # Save image if provided
+    image_path = None
+    if image:
+        image_path = os.path.join(UPLOAD_DIR, "input_image.png")
+        image.save(image_path)
+
+    # Run generation
+    output_path = run_wan_generate(
+        prompt,
+        image_path,
+        lora_paths,
+        lora_weights,
+        OUTPUT_DIR,
+        width,
+        height
+    )
+    return output_path
+
+with gr.Blocks() as iface:
+    with gr.Row():
+        prompt = gr.Textbox(label="Prompt", placeholder="Enter your prompt")
+        image = gr.Image(type="pil", label="Optional Image (Conditioning)")
 
     with gr.Row():
-        prompt = gr.Textbox(label="Prompt", placeholder="Describe what you want to render...")
-        input_image = gr.Image(label="Optional Image", type="filepath")
+        uploaded_files = gr.File(
+            label="Upload LoRA/Checkpoint Files",
+            file_types=[".safetensors", ".ckpt", ".pt", ".lora"],
+            file_count="multiple"
+        )
 
-    lora_files = gr.CheckboxGroup(choices=get_lora_list(), label="Select LoRA Files")
+    with gr.Row():
+        weights = gr.Dataframe(headers=["LoRA Weight"], datatype=["number"], row_count=3, label="Set Weights (Match File Order)")
 
-    aspect_ratio = gr.Radio(choices=list(ASPECT_RATIOS.keys()), value="1280x960 (4:3)", label="Aspect Ratio")
+    with gr.Row():
+        width = gr.Number(value=512, label="Width")
+        height = gr.Number(value=512, label="Height")
 
-    run_button = gr.Button("Run WAN")
-    clear_button = gr.Button("Clear All Renders")
+    with gr.Row():
+        submit_btn = gr.Button("Generate Video")
+        output_video = gr.Video(label="Output Video")
 
-    progress = gr.Textbox(label="Status")
-    outputs = gr.File(label="Rendered Video")
-
-    def generate(prompt, input_image, lora_files, aspect_ratio):
-        width, height = ASPECT_RATIOS[aspect_ratio]
-        progress_text = "Generating..."
-        output_path = run_wan_generate(prompt, input_image, lora_files, width, height)
-        progress_text = "Done!"
-        return progress_text, output_path
-
-    def clear():
-        purge_outputs()
-        return "", None
-
-    run_button.click(
-        fn=generate,
-        inputs=[prompt, input_image, lora_files, aspect_ratio],
-        outputs=[progress, outputs]
+    submit_btn.click(
+        fn=submit,
+        inputs=[prompt, image, uploaded_files, width, height, weights],
+        outputs=output_video
     )
 
-    clear_button.click(
-        fn=clear,
-        inputs=[],
-        outputs=[progress, outputs]
-    )
-
-demo.launch(
-    server_name="0.0.0.0",
-    server_port=7860,
-    allowed_paths=["/workspace/outputs"]
-)
+iface.launch(server_name="0.0.0.0", server_port=7860)
