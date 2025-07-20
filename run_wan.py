@@ -5,13 +5,23 @@ import torch
 from diffusers import DiffusionPipeline
 import imageio
 
-# Load WAN 2.1 T2V 14B model (public, working)
-print("Loading WAN 2.1 T2V 14B...")
-wan_pipe = DiffusionPipeline.from_pretrained(
-    "Wan-AI/Wan2.1-T2V-14B-Diffusers",
-    torch_dtype=torch.float16
-).to("cuda")
-print("Model loaded.")
+# Define a reusable loader for base or user-supplied model
+def load_wan_pipeline(model_path=None):
+    if model_path:
+        print(f"Loading user model from: {model_path}")
+        return DiffusionPipeline.from_pretrained(
+            model_path,
+            torch_dtype=torch.float16
+        ).to("cuda")
+    else:
+        print("Loading default WAN base model...")
+        return DiffusionPipeline.from_pretrained(
+            "Wan-AI/Wan2.1-T2V-14B-Diffusers",
+            torch_dtype=torch.float16
+        ).to("cuda")
+
+# Load default model at startup
+wan_pipe = load_wan_pipeline()
 
 def run_wan_generate(
     prompt: str,
@@ -22,14 +32,7 @@ def run_wan_generate(
     width: int,
     height: int
 ) -> str:
-    # Conditioning image is not supported by this model (T2V only)
-    init_image = None  # kept for compatibility, ignored here
-
-    # LoRA loading (not supported by this model — placeholder)
-    if lora_paths:
-        for path, weight in zip(lora_paths, lora_weights):
-            print(f"Skipping LoRA {path} — not supported in this model.")
-
+    # We'll add dynamic model swapping in Step 2
     print(f"Generating video with prompt: {prompt}")
     try:
         result = wan_pipe(
