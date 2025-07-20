@@ -2,6 +2,6 @@ torch
 diffusers
 transformers
 accelerate
+pillow
 gradio
 imageio[ffmpeg]
-Pillow
