@@ -1,9 +1,10 @@
 import os
+import shutil
 import gradio as gr
 from run_wan import run_wan_generate
 
-UPLOAD_DIR = "./uploads"
-OUTPUT_DIR = "./outputs"
+UPLOAD_DIR = "/workspace/uploads"
+OUTPUT_DIR = "/workspace/outputs"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -12,31 +13,34 @@ def submit(prompt, image, uploaded_files, width, height, weights):
     lora_paths = []
     lora_weights = []
 
-    # Save uploaded files
-    for file_obj, weight in zip(uploaded_files, weights):
-        file_path = os.path.join(UPLOAD_DIR, os.path.basename(file_obj.name))
-        with open(file_path, "wb") as f:
-            f.write(file_obj.read())
+    # Flatten weights from dataframe
+    flat_weights = [w[0] if isinstance(w, list) else w for w in weights]
 
-        lora_paths.append(file_path)
-        lora_weights.append(weight)
+    for file_obj, weight in zip(uploaded_files, flat_weights):
+        filename = os.path.basename(file_obj.name)
+        dest_path = os.path.join(UPLOAD_DIR, filename)
+        shutil.copyfile(file_obj.name, dest_path)
 
-    # Save image if provided
+        lora_paths.append(dest_path)
+        lora_weights.append(float(weight) if weight is not None else 1.0)
+
+    # Save conditioning image if provided
     image_path = None
     if image:
         image_path = os.path.join(UPLOAD_DIR, "input_image.png")
         image.save(image_path)
 
-    # Run generation
+    # Run WAN generation
     output_path = run_wan_generate(
         prompt,
         image_path,
         lora_paths,
         lora_weights,
         OUTPUT_DIR,
-        width,
-        height
+        int(width),
+        int(height)
     )
+
     return output_path
 
 with gr.Blocks() as iface:
@@ -52,7 +56,12 @@ with gr.Blocks() as iface:
         )
 
     with gr.Row():
-        weights = gr.Dataframe(headers=["LoRA Weight"], datatype=["number"], row_count=3, label="Set Weights (Match File Order)")
+        weights = gr.Dataframe(
+            headers=["LoRA Weight"],
+            datatype=["number"],
+            row_count=3,
+            label="Set LoRA Weights (match file order)"
+        )
 
     with gr.Row():
         width = gr.Number(value=512, label="Width")
