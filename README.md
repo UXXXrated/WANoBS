@@ -38,7 +38,3 @@ Your Pod ID is the short, random ID shown at the top of your Pod’s details pag
 - Auto-named with timestamp + aspect ratio  
 - Only download the ones you want  
 - `Purge All` wipes them all.
-
-## ✅ Enjoy!
-
-This is your **one-click** WAN video lab — no node graphs, no terminals.
